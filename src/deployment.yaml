@@ -1,0 +1,84 @@
+# DEPLOYMENT MONGO
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+spec:
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo
+          ports:
+            - containerPort: 27017
+          env:
+          - name: MONGO_INITDB_ROOT_USERNAME
+            value: root 
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            value: root
+---
+# SERVICE MONGO
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  selector:
+    app: mongo
+  ports:
+  - port: 27017
+---
+# DEPLOYMENT APP
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+        - name: rotten-potatoes
+          image: jefersonalmeida/rotten-potatoes:v1
+          ports:
+          - containerPort: 5000
+          env:
+          - name: MONGODB_DB
+            value: "admin"
+          - name: MONGODB_HOST
+            value: "mongo"
+          - name: MONGODB_PORT
+            value: "27017"
+          - name: MONGODB_USERNAME
+            value: "root"
+          - name: MONGODB_PASSWORD
+            value: "root"
+---
+# SERVICE APP
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  selector:
+    app: app
+  ports:
+  - port: 80
+    targetPort: 5000
+    nodePort: 30000
+  type: NodePort
+#  type: LoadBalancer
+
+
